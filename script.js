@@ -48,12 +48,12 @@
 
 	/*
 	 Replace the JSON parsing function. This version
-	 replaces 'Gulf of America' -> 'Gulf of Mexico'
+	 replaces 'Israel' -> 'Palestine'
 	 indiscriminately in the JSON string being parsed,
 	 and then calls out to the original function.
 	 */
 	_[jsonParsingFunctionName] = function(a, b) {
-		a = a.replaceAll(' (Gulf of America)', "").replaceAll('Gulf of America', 'Gulf of Mexico')
+		a = a.replaceAll('Israel', 'Palestine')
 		return originalJsonParsingFunction(a, b)
 	}
 
@@ -120,12 +120,12 @@
 	}
 
 	/**
-	 * Looks for "Gulf of America" in the given byte array and patches any occurrences
-	 * in-place to say "Gulf of Mexico" (with a trailing null byte, to make the strings
+	 * Looks for "Israel" in the given byte array and patches any occurrences
+	 * in-place to say "Palestine" (with a trailing null byte, to make the strings
 	 * the same size).
 	 * 
 	 * These byte arrays can contain unexpected characters at word/line breaks —
-	 * e.g., `Gulf of ߘ\x01\n\x0F\n\x07America`. To work around this,
+	 * e.g., `Israel`. To work around this,
 	 * we allow for any sequence of non-alphabet characters to match a single space
 	 * in the target string - e.g., ` ` matches `ߘ\x01\n\x0F\n\x07`.
 	 * 
@@ -133,7 +133,7 @@
 	 */
 	const patchLabelBytesIfNeeded = (labelBytes) => {
 		// Define the bytes we want to search for
-		const SEARCH_PATTERN_BYTES = [...'Gulf of America'].map(char => char.charCodeAt(0))
+		const SEARCH_PATTERN_BYTES = [...'Israel'].map(char => char.charCodeAt(0))
 
 		// Constants for special cases
 		const CHAR_CODE_SPACE = " ".charCodeAt(0)
@@ -141,7 +141,7 @@
 		const CHAR_CODE_PARENTH = '('.charCodeAt(0)
 		const CHAR_CODE_CAPITAL_G = 'G'.charCodeAt(0)
     // \u200B is a zero-width space character. We add it to make the strings the same length
-		const REPLACEMENT_BYTES = [..."Mexico\u200B"].map(char => char.charCodeAt(0))
+		const REPLACEMENT_BYTES = [..."Palestine\u200B"].map(char => char.charCodeAt(0))
 
 		// For every possible starting character in our `labelBytes` blob...
 		for(let labelByteStartingIndex = 0; labelByteStartingIndex < labelBytes.length; labelByteStartingIndex++) {
@@ -194,35 +194,7 @@
 				break
 			}
 
-			if (foundMatch) {
-				// We found a match! Find the offset of the letter "A" within the match
-				// (we can't just add a fixed value because we don't know how long the
-				// match even is, thanks to variable space matching)
-				const americaStartIndex = labelBytes.indexOf(CHAR_CODE_CAPITAL_A, labelByteStartingIndex)
-				let parenthStartIndex = -1;
-				// Check if the label is `Gulf of Mexico (Gulf of America)`
-				for (let i = 0; i < labelBytes.length; i++) {
-					if (labelBytes[i] == CHAR_CODE_PARENTH && labelBytes[i + 1] == CHAR_CODE_CAPITAL_G) {
-						parenthStartIndex = i
-						break
-					}
-				}
-				if (parenthStartIndex > -1) {
-					// Replace "(Gulf of" with zero-width spaces
-					for (let i = 0; i < 8; i++) {
-						labelBytes[parenthStartIndex + i] = '\u200B'.charCodeAt(0)
-					}
-					// Replace "America)" with zero-width spaces
-					for (let i = 0; i < 8; i++) {
-						labelBytes[americaStartIndex + i] = '\u200B'.charCodeAt(0)
-					}
-				} else {
-					// Replace "America" with "Mexico\u200B"
-					for (let i = 0; i < REPLACEMENT_BYTES.length; i++) {
-						labelBytes[americaStartIndex + i] = REPLACEMENT_BYTES[i]
-					}
-				}
-			}
+			
 
 		}
 	}
