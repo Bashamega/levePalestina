@@ -124,10 +124,6 @@
 	 * in-place to say "Palestine" (with a trailing null byte, to make the strings
 	 * the same size).
 	 * 
-	 * These byte arrays can contain unexpected characters at word/line breaks —
-	 * e.g., `Israel`. To work around this,
-	 * we allow for any sequence of non-alphabet characters to match a single space
-	 * in the target string - e.g., ` ` matches `ߘ\x01\n\x0F\n\x07`.
 	 * 
 	 * @param {Uint8Array} labelBytes An array of bytes containing label information.
 	 */
@@ -137,11 +133,9 @@
 
 		// Constants for special cases
 		const CHAR_CODE_SPACE = " ".charCodeAt(0)
-		const CHAR_CODE_CAPITAL_A = "A".charCodeAt(0)
+		const CHAR_CODE_CAPITAL_I = "I".charCodeAt(0)
 		const CHAR_CODE_PARENTH = '('.charCodeAt(0)
-		const CHAR_CODE_CAPITAL_G = 'G'.charCodeAt(0)
-    // \u200B is a zero-width space character. We add it to make the strings the same length
-		const REPLACEMENT_BYTES = [..."Palestine\u200B"].map(char => char.charCodeAt(0))
+		const REPLACEMENT_BYTES = [...'فلسطين'].map(char => char.charCodeAt(0))
 
 		// For every possible starting character in our `labelBytes` blob...
 		for(let labelByteStartingIndex = 0; labelByteStartingIndex < labelBytes.length; labelByteStartingIndex++) {
@@ -194,7 +188,35 @@
 				break
 			}
 
-			
+			if (foundMatch) {
+				// We found a match! Find the offset of the letter "I" within the match
+				// (we can't just add a fixed value because we don't know how long the
+				// match even is, thanks to variable space matching)
+				const israelStartIndex = labelBytes.indexOf(CHAR_CODE_CAPITAL_I, labelByteStartingIndex)
+				let parenthStartIndex = -1;
+				// Check if the label is `Palestine (Israel)`
+				for (let i = 0; i < labelBytes.length; i++) {
+					if (labelBytes[i] == CHAR_CODE_PARENTH && labelBytes[i + 1] == CHAR_CODE_CAPITAL_I) {
+						parenthStartIndex = i
+						break
+					}
+				}
+				if (parenthStartIndex > -1) {
+					// Replace "(Israel" with zero-width spaces
+					for (let i = 0; i < 8; i++) {
+						labelBytes[parenthStartIndex + i] = '\u200B'.charCodeAt(0)
+					}
+					// Replace "Israel)" with zero-width spaces
+					for (let i = 0; i < 8; i++) {
+						labelBytes[israelStartIndex + i] = '\u200B'.charCodeAt(0)
+					}
+				} else {
+					// Replace "Israel" with "Palestine\u200B"
+					for (let i = 0; i < REPLACEMENT_BYTES.length; i++) {
+						labelBytes[israelStartIndex + i] = REPLACEMENT_BYTES[i]
+					}
+				}
+			}
 
 		}
 	}
