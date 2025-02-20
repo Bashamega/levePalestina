@@ -211,7 +211,6 @@
 						labelBytes[israelStartIndex + i] = '\u200B'.charCodeAt(0)
 					}
 				} else {
-					// Replace "Israel" with "Palestine\u200B"
 					for (let i = 0; i < REPLACEMENT_BYTES.length; i++) {
 						labelBytes[israelStartIndex + i] = REPLACEMENT_BYTES[i]
 					}
