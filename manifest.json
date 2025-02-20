@@ -1,6 +1,7 @@
 {
   "name": "Leve Palestina",
   "description": "A browser extension that restores Palestine’s name on the map.",
+  "author": "Bryce Bostwick (Modified by Adam Naji)",
   "version": "1.0",
   "manifest_version": 3,
   "icons": {
